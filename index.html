@@ -98,7 +98,7 @@
 				geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
 
 				geometry.computeBoundingSphere();
-
+                mesh = new THREE.
 				mesh = new THREE.Line( geometry, material );
 				scene.add( mesh );
 
@@ -138,7 +138,7 @@
 			function animate() {
 
 				requestAnimationFrame( animate );
-
+                
 				render();
 				stats.update();
 
@@ -148,7 +148,7 @@
 
 				var time = Date.now() * 0.001;
 
-				mesh.rotation.x = time * 0.25;
+				//mesh.rotation.x = time * 0.25;
 				mesh.rotation.y = time * 0.5;
 
 				renderer.render( scene, camera );
