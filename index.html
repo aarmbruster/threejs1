@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - buffergeometry - lines</title>
+		<title>three.js - webgl - buffergeometry fork - lines</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -32,7 +32,7 @@
 	<body>
 
 		<div id="container"></div>
-		<div id="info"><a href="http://threejs.org" target="_blank">three.js</a> webgl - buffergeometry - lines</div>
+		<div id="info">three.js webgl - webgl - buffergeometry fork - lines</div>
 
 		<script src="js/three.js"></script>
 
@@ -49,6 +49,14 @@
 
 			var mesh;
 
+            var prevMousePos = new THREE.Vector2(0, 0);
+            
+            var isMouseDown = false;
+            
+            var delta = new THREE.Vector2(0, 0);
+            
+            var lerpAlpha = 1.0;
+            
 			init();
 			animate();
 
@@ -63,8 +71,8 @@
 
 				scene = new THREE.Scene();
 
-
-				var segments = 10000;
+                
+				var segments = 3500;
 
 				var geometry = new THREE.BufferGeometry();
 				var material = new THREE.LineBasicMaterial({ vertexColors: THREE.VertexColors });
@@ -77,9 +85,10 @@
 				for ( var i = 0; i < segments; i ++ ) {
 
 					var x = Math.random() * r - r / 2;
-					var y = Math.random() * r - r / 2;
-					var z = Math.random() * r - r / 2;
-
+                    var z = Math.random() * r - r / 2;
+                    
+                    //var y = (Math.abs(x) + Math.abs(z)) - r/2;
+                    var y = (Math.random() - 0.5) * ((x + z) * 2);
 					// positions
 
 					positions[ i * 3 ] = x;
@@ -98,13 +107,12 @@
 				geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
 
 				geometry.computeBoundingSphere();
-                mesh = new THREE.
 				mesh = new THREE.Line( geometry, material );
 				scene.add( mesh );
 
 				//
 
-				renderer = new THREE.WebGLRenderer( { antialias: false } );
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
@@ -121,7 +129,9 @@
 				//
 
 				window.addEventListener( 'resize', onWindowResize, false );
-
+                window.addEventListener( 'mousemove', onmousemove);
+                window.addEventListener( 'mousedown', onmousedown, true);
+                window.addEventListener( 'mouseup', onmouseup, true);
 			}
 
 			function onWindowResize() {
@@ -130,11 +140,48 @@
 				camera.updateProjectionMatrix();
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
-
+                
 			}
 
 			//
 
+            function onmousedown(ev) {
+                
+                lerpAlpha = 0.0;
+                isMouseDown = true;
+                prevMousePos.x = ev.clientX;
+                prevMousePos.y = ev.clientY;
+                
+            }
+            
+            function onmouseup(ev) {
+                
+                delta.x = (ev.clientY - prevMousePos.y) * 0.01;
+                delta.y = (ev.clientX - prevMousePos.x) * 0.01;
+                isMouseDown = false;
+
+            }
+
+            function onmousemove(ev) {
+                
+                if(!isMouseDown) {
+                    return;
+                }
+                
+                delta.x = (ev.clientY - prevMousePos.y) * 0.01;
+                delta.y = (ev.clientX - prevMousePos.x) * 0.01;
+                
+                var x = mesh.rotation.x + delta.x;
+                var y = mesh.rotation.y + delta.y;
+                
+                mesh.rotation.x = Math.abs(x) > Math.PI*0.5 ? mesh.rotation.x : x;
+                mesh.rotation.y = y;
+                
+                prevMousePos.x = ev.clientX;
+                prevMousePos.y = ev.clientY;
+                
+            }
+            
 			function animate() {
 
 				requestAnimationFrame( animate );
@@ -147,13 +194,21 @@
 			function render() {
 
 				var time = Date.now() * 0.001;
-
-				//mesh.rotation.x = time * 0.25;
-				mesh.rotation.y = time * 0.5;
-
 				renderer.render( scene, camera );
 
 			}
+            
+            function moveLines() {
+                
+                if(!isMouseDown && lerpAlpha < 1) {
+                    
+                    lerpAlpha = Math.min(lerpAlpha + 0.001, 1);
+                    delta = delta.lerp(new THREE.Vector2(0, 0), lerpAlpha);
+                    var x =  mesh.rotation.x + delta.x;
+                    mesh.rotation.x = Math.abs(x) > Math.PI*0.5 ? mesh.rotation.x : x;
+                    mesh.rotation.y += delta.y;
+                }
+            }
 
 		</script>
 
